@@ -1,171 +1,175 @@
+
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from difflib import get_close_matches
 
-st.set_page_config(page_title="IPL Data Explorer", layout="wide")
-st.title("🏏 IPL Comprehensive Analysis Dashboard")
+st.set_page_config(page_title="IPL Smart Dashboard", layout="wide")
+st.title("🏏 IPL Analysis Dashboard with Typo Tolerance")
 
-# Load data
 @st.cache_data
 def load_data():
-    matches_url = "https://drive.google.com/uc?id=1PAgRqv7J76lR6Ogew7xqsKm3YP0dR5o_"
-    deliveries_url = "https://drive.google.com/uc?id=1KD5HPSS9Bk5sd2Q-JHByAKkbuB8yOGJK"
-    matches = pd.read_csv(matches_url)
-    deliveries = pd.read_csv(deliveries_url)
+    matches = pd.read_csv("https://drive.google.com/uc?id=1PAgRqv7J76lR6Ogew7xqsKm3YP0dR5o_")
+    deliveries = pd.read_csv("https://drive.google.com/uc?id=1KD5HPSS9Bk5sd2Q-JHByAKkbuB8yOGJK")
     return matches, deliveries
 
 matches, deliveries = load_data()
 
-# Sidebar options
-st.sidebar.header("Select Analysis")
-options = st.sidebar.radio("Choose an analysis:", (
-    "Overview",
-    "Toss Decision",
-    "Toss Win vs Match Win",
-    "Match Results by Team",
-    "Player of the Match",
-    "Batsman vs Teams",
-    "Batsman vs Bowlers",
-    "Team Statistics",
-    "Top Batsmen",
+def get_closest_match(name, options):
+    match = get_close_matches(name, options, n=1, cutoff=0.5)
+    return match[0] if match else None
+
+tabs = st.tabs([
+    "Match Results",
+    "Player of Match",
+    "Bowling by Team",
+    "Bowler Summary",
+    "Team Result",
+    "Season Summary",
+    "Top Batsman",
     "Top Wicket Takers",
-    "Powerplay Runs"
-))
+    "Powerplay Runs",
+    "Toss Win Match Win"
+])
 
-# Overview
-if options == "Overview":
-    st.header("Dataset Overview")
-    st.subheader("Matches Data")
-    st.dataframe(matches.head())
-    st.subheader("Deliveries Data")
-    st.dataframe(deliveries.head())
+with tabs[0]:
+    st.header("Match Results by Team")
+    user_input = st.text_input("Enter team name:")
+    if user_input:
+        team = get_closest_match(user_input, matches['team1'].unique())
+        if team:
+            csk = (matches['team1'] == team) | (matches['team2'] == team)
+            csk_matches = matches[csk]
+            csk_won = csk_matches['winner'] == team
+            count = csk_won.value_counts()
+            result = ['Won', 'Lost']
+            total = [count.get(True, 0), count.get(False, 0)]
+            fig, ax = plt.subplots()
+            bars = ax.bar(result, total, color='yellow')
+            for i in range(len(bars)):
+                ax.text(i, total[i] + 1, str(total[i]), ha='center')
+            ax.set_title(f"Match Results for {team}")
+            ax.set_ylabel("Number of Matches")
+            st.pyplot(fig)
+        else:
+            st.error("Team not found.")
 
-# Toss Decision
-elif options == "Toss Decision":
-    st.header("Toss Decision Distribution")
-    toss_decision = matches['toss_decision'].value_counts()
-    fig1, ax1 = plt.subplots()
-    ax1.pie(toss_decision, labels=toss_decision.index, autopct='%1.1f%%', startangle=90)
-    ax1.axis('equal')
-    st.pyplot(fig1)
-
-# Toss Win vs Match Win
-elif options == "Toss Win vs Match Win":
-    st.header("Toss Win vs Match Win Analysis")
-    team_name = st.text_input("Enter the name of the team:")
-    if team_name:
-        toss_winning_team = matches[matches['toss_winner'] == team_name]
-        t = toss_winning_team['winner'] == toss_winning_team['toss_winner']
-        total_toss_win = t.count()
-        total_match_win = t.sum()
-        win_percentage = round((total_match_win * 100) / total_toss_win, 2) if total_toss_win > 0 else 0
-
-        st.write("Total Toss Win:", total_toss_win)
-        st.write("Total Match Win:", total_match_win)
-        st.write("Winning Percentage:", win_percentage, "%")
-
-# Match Results by Team
-elif options == "Match Results by Team":
-    team = st.text_input("Enter the team name:")
-    if team:
-        mask = (matches['team1'] == team) | (matches['team2'] == team)
-        team_matches = matches[mask]
-        wins = (team_matches['winner'] == team).sum()
-        total = len(team_matches)
-        losses = total - wins
-        fig, ax = plt.subplots()
-        bars = ax.bar(['Won', 'Lost'], [wins, losses], color='orange')
-        for i in range(len(bars)):
-            ax.text(i, bars[i].get_height() + 1, str(int(bars[i].get_height())), ha='center')
-        ax.set_title(f"Match Results for {team}")
-        st.pyplot(fig)
-
-# Player of the Match
-elif options == "Player of the Match":
-    player = st.text_input("Enter player name:")
-    if player:
-        player_clean = player.strip().lower()
-        df = matches[matches['player_of_match'].str.lower() == player_clean]
-        if not df.empty:
-            st.subheader(f"Player of the Match Awards: {player.strip()}")
-            if 'season' in df.columns and 'player_of_match' in df.columns:
-                st.dataframe(df[['season', 'player_of_match']])
-            else:
-                st.dataframe(df)
-
-            season_counts = df['season'].value_counts().sort_index()
+with tabs[1]:
+    st.header("Player of the Match Awards")
+    player_input = st.text_input("Enter player name:")
+    if player_input:
+        batter = get_closest_match(player_input, deliveries['batter'].unique())
+        if batter:
+            s = matches[matches['player_of_match'] == batter]
+            st.dataframe(s[['season', 'player_of_match']])
+            season_counts = s['season'].value_counts().sort_index()
             fig, ax = plt.subplots()
             season_counts.plot(kind='bar', ax=ax)
             for i, v in enumerate(season_counts):
                 ax.text(i, v + 0.5, str(v), ha='center')
-            ax.set_title(f"Player of the Match by Season: {player.strip()}")
+            ax.set_title(f"Player of the Match Awards by Season: {batter}")
             st.pyplot(fig)
         else:
-            st.warning("Player not found or has no awards.")
+            st.error("Player not found.")
 
-# Batsman vs Teams
-elif options == "Batsman vs Teams":
-    player = st.text_input("Enter batsman name:")
-    if player:
-        df = deliveries[deliveries['batter'].str.lower() == player.strip().lower()]
-        grouped = df.groupby('bowling_team')['batsman_runs'].sum().sort_values(ascending=False)
-        st.bar_chart(grouped)
+with tabs[2]:
+    st.header("Batting Against Teams")
+    player_name = st.text_input("Enter player name:", key="batting")
+    if player_name:
+        player = get_closest_match(player_name, deliveries['batter'].unique())
+        if player:
+            dhoni = deliveries[deliveries['batter'] == player]
+            d = dhoni.groupby('bowling_team')['batsman_runs'].agg('sum').sort_values(ascending=False)
+            st.bar_chart(d)
 
-# Batsman vs Bowlers
-elif options == "Batsman vs Bowlers":
-    player = st.text_input("Enter batsman name:")
-    if player:
-        df = deliveries[deliveries['batter'].str.lower() == player.strip().lower()]
-        grouped = df.groupby('bowler')['batsman_runs'].sum().sort_values(ascending=False).head(10)
-        st.bar_chart(grouped)
+with tabs[3]:
+    st.header("Bowler Analysis for Batsman")
+    player_name = st.text_input("Enter player name:", key="bowler")
+    if player_name:
+        player = get_closest_match(player_name, deliveries['batter'].unique())
+        if player:
+            dhoni = deliveries[deliveries['batter'] == player]
+            c = dhoni.groupby('bowler')['batsman_runs'].agg('sum').sort_values(ascending=False).head(10)
+            st.bar_chart(c)
 
-# Team Statistics
-elif options == "Team Statistics":
-    team_col = st.selectbox("Select team-related column:", ["winner", "toss_winner", "team1", "team2"])
-    team_counts = matches[team_col].value_counts()
-    fig, ax = plt.subplots()
-    sns.barplot(x=team_counts.index, y=team_counts.values, ax=ax)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-    ax.set_title(f"Distribution by {team_col}")
+with tabs[4]:
+    st.header("Team Result Summary")
+    team = st.text_input("Enter team name:", key="team_result")
+    if team:
+        team = get_closest_match(team, matches['team1'].unique())
+        if team:
+            winner = matches['winner'].value_counts()
+            st.bar_chart(winner)
+
+with tabs[5]:
+    st.header("📅 Matches by Season")
+    
+    # Count matches per season
+    season_count = matches['season'].value_counts().sort_index()
+    
+    # Plot with custom figure
+    fig, ax = plt.subplots(figsize=(10, 5))
+    bars = ax.bar(season_count.index.astype(str), season_count.values, color='skyblue')
+
+    # Add data labels on bars
+    for bar in bars:
+        height = bar.get_height()
+        ax.annotate(f'{height}',
+                    xy=(bar.get_x() + bar.get_width() / 2, height),
+                    xytext=(0, 3),  # Offset label above the bar
+                    textcoords="offset points",
+                    ha='center', va='bottom')
+
+    ax.set_xlabel("Season")
+    ax.set_ylabel("Number of Matches")
+    ax.set_title("Matches Played Per IPL Season")
+    ax.tick_params(axis='x', rotation=45)
+
     st.pyplot(fig)
 
-# Top Batsmen (based on selected team)
-elif options == "Top Batsmen":
-    team = st.text_input("Enter the team name (e.g., Mumbai Indians):")
+with tabs[6]:
+    st.header("Top Batsmen for a Team")
+    team = st.text_input("Enter team name:", key="top_batsman")
     if team:
-        team_data = deliveries[deliveries['batting_team'].str.lower() == team.strip().lower()]
-        if not team_data.empty:
+        team = get_closest_match(team, deliveries['batting_team'].unique())
+        if team:
+            team_data = deliveries[deliveries['batting_team'] == team]
             top_batsmen = team_data.groupby('batter')['batsman_runs'].sum().sort_values(ascending=False).head(10)
-            st.subheader(f"Top 10 Batsmen for {team.strip()}")
             st.bar_chart(top_batsmen)
-        else:
-            st.warning("Team not found or no batting data available.")
 
-# Top Wicket Takers (based on selected team)
-elif options == "Top Wicket Takers":
-    team = st.text_input("Enter the team name (for bowling analysis):")
+with tabs[7]:
+    st.header("Top 5 Wicket Takers for Team")
+    team = st.text_input("Enter team name:", key="top_wickets")
     if team:
-        df = deliveries[(deliveries['bowling_team'].str.lower() == team.strip().lower()) & (deliveries['dismissal_kind'].notnull())]
-        if not df.empty:
-            top_bowlers = df['bowler'].value_counts().head(10)
-            st.subheader(f"Top 10 Wicket Takers for {team.strip()}")
-            st.bar_chart(top_bowlers)
-        else:
-            st.warning("Team not found or no bowling data available.")
+        team = get_closest_match(team, deliveries['bowling_team'].unique())
+        if team:
+            df = deliveries[(deliveries['bowling_team'] == team) & (deliveries['dismissal_kind'].notnull())]
+            top_wicket_takers = df['bowler'].value_counts().head(5)
+            st.bar_chart(top_wicket_takers)
 
-# Powerplay Runs (based on selected team)
-elif options == "Powerplay Runs":
-    st.header("Powerplay Run Analysis (Overs 1–6)")
-    team = st.text_input("Enter the team name:")
+with tabs[8]:
+    st.header("Powerplay Runs (Overs 1–6)")
+    team = st.text_input("Enter team name:", key="powerplay")
     if team:
-        deliveries['over'] = deliveries['over'].astype(int)
-        pp = deliveries[(deliveries['over'] <= 6) & (deliveries['batting_team'].str.lower() == team.strip().lower())]
-        if not pp.empty:
+        team = get_closest_match(team, deliveries['batting_team'].unique())
+        if team:
+            deliveries['over'] = deliveries['over'].astype(int)
+            pp = deliveries[(deliveries['over'] <= 6) & (deliveries['batting_team'] == team)]
             runs_by_batsman = pp.groupby('batter')['total_runs'].sum().sort_values(ascending=False).head(10)
-            st.subheader(f"Top Powerplay Scorers for {team.strip()}")
             st.bar_chart(runs_by_batsman)
-        else:
-            st.warning("No powerplay data found for this team.")
 
-st.success("✅ All modules are now updated to follow your logic exactly.")
+with tabs[9]:
+    st.header("Toss Win Match Win Percentage")
+    team = st.text_input("Enter team name:", key="toss_win")
+    if team:
+        team = get_closest_match(team, matches['toss_winner'].unique())
+        if team:
+            toss_winning_team = matches[matches['toss_winner'] == team]
+            t = toss_winning_team['winner'] == toss_winning_team['toss_winner']
+            total_toss_win = t.count()
+            total_match_win = t.sum()
+            win_percentage = round((total_match_win * 100) / total_toss_win, 2) if total_toss_win > 0 else 0
+            st.write("Total Toss Win:", total_toss_win)
+            st.write("Total Match Win:", total_match_win)
+            st.write("Winning Percentage:", win_percentage, "%")
