@@ -5,7 +5,7 @@ import seaborn as sns
 from difflib import get_close_matches
 
 st.set_page_config(page_title="IPL Smart Dashboard", layout="wide")
-st.title("🏏 IPL Analysis Dashboard with Typo Tolerance")
+st.title("🏏 IPL Analysis Dashboard")
 
 @st.cache_data
 def load_data():
