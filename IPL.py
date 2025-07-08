@@ -124,18 +124,7 @@ with tabs[4]:
             ax.tick_params(axis='x', rotation=45)
             st.pyplot(fig)
 
-# 6. Season Summary
-with tabs[5]:
-    st.header("📅 Matches by Season")
-    season_count = matches['season'].value_counts().sort_index()
-    fig, ax = plt.subplots(figsize=(10, 5))
-    bars = ax.bar(season_count.index.astype(str), season_count.values, color='skyblue')
-    ax.bar_label(bars)
-    ax.set_xlabel("Season")
-    ax.set_ylabel("Number of Matches")
-    ax.set_title("Matches Played Per IPL Season")
-    ax.tick_params(axis='x', rotation=45)
-    st.pyplot(fig)
+
 
 # 7. Top Batsman
 with tabs[6]:
