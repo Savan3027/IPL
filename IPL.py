@@ -57,27 +57,18 @@ with tabs[0]:
 with tabs[1]:
     st.header("Player of the Match Awards")
     player_input = st.text_input("Enter player name:")
-
     if player_input:
-        # Drop NaNs and convert to strings for safe fuzzy matching
         player_list = matches['player_of_match'].dropna().astype(str).unique()
         player_name = get_closest_match(player_input, player_list)
-
         if player_name:
             player_df = matches[matches['player_of_match'] == player_name]
-
-            # Group by season and count (like your notebook output)
             season_awards = player_df['season'].value_counts().sort_index()
             st.write("### Awards by Season")
             st.dataframe(season_awards.rename("count"))
 
-            # Plot the bar chart
             fig, ax = plt.subplots()
             bars = ax.bar(season_awards.index.astype(str), season_awards.values, color='lightgreen')
-            for bar in bars:
-                height = bar.get_height()
-                ax.annotate(f"{height}", xy=(bar.get_x() + bar.get_width() / 2, height),
-                            xytext=(0, 3), textcoords="offset points", ha='center')
+            ax.bar_label(bars)
             ax.set_ylabel("Awards")
             ax.set_xlabel("Season")
             ax.set_title(f"{player_name} - Player of the Match Awards by Season")
@@ -94,8 +85,13 @@ with tabs[2]:
         player = get_closest_match(player_name, deliveries['batter'].unique())
         if player:
             df = deliveries[deliveries['batter'] == player]
-            d = df.groupby('bowling_team')['batsman_runs'].agg('sum').sort_values(ascending=False)
-            st.bar_chart(d)
+            grouped = df.groupby('bowling_team')['batsman_runs'].sum().sort_values(ascending=False)
+            fig, ax = plt.subplots()
+            bars = ax.bar(grouped.index, grouped.values)
+            ax.bar_label(bars)
+            ax.set_title(f"{player} vs Bowling Teams")
+            ax.tick_params(axis='x', rotation=45)
+            st.pyplot(fig)
 
 # 4. Bowler Summary
 with tabs[3]:
@@ -105,8 +101,13 @@ with tabs[3]:
         player = get_closest_match(player_name, deliveries['batter'].unique())
         if player:
             df = deliveries[deliveries['batter'] == player]
-            c = df.groupby('bowler')['batsman_runs'].agg('sum').sort_values(ascending=False).head(10)
-            st.bar_chart(c)
+            grouped = df.groupby('bowler')['batsman_runs'].sum().sort_values(ascending=False).head(10)
+            fig, ax = plt.subplots()
+            bars = ax.bar(grouped.index, grouped.values)
+            ax.bar_label(bars)
+            ax.set_title(f"{player} vs Bowlers (Top 10)")
+            ax.tick_params(axis='x', rotation=45)
+            st.pyplot(fig)
 
 # 5. Team Result
 with tabs[4]:
@@ -115,8 +116,13 @@ with tabs[4]:
     if team:
         team = get_closest_match(team, matches['team1'].unique())
         if team:
-            winner = matches['winner'].value_counts()
-            st.bar_chart(winner)
+            winner = matches['winner'].value_counts().sort_values(ascending=False)
+            fig, ax = plt.subplots()
+            bars = ax.bar(winner.index, winner.values)
+            ax.bar_label(bars)
+            ax.set_title("Total Match Wins by Teams")
+            ax.tick_params(axis='x', rotation=45)
+            st.pyplot(fig)
 
 # 6. Season Summary
 with tabs[5]:
@@ -124,11 +130,7 @@ with tabs[5]:
     season_count = matches['season'].value_counts().sort_index()
     fig, ax = plt.subplots(figsize=(10, 5))
     bars = ax.bar(season_count.index.astype(str), season_count.values, color='skyblue')
-    for bar in bars:
-        height = bar.get_height()
-        ax.annotate(f'{height}',
-                    xy=(bar.get_x() + bar.get_width() / 2, height),
-                    xytext=(0, 3), textcoords="offset points", ha='center', va='bottom')
+    ax.bar_label(bars)
     ax.set_xlabel("Season")
     ax.set_ylabel("Number of Matches")
     ax.set_title("Matches Played Per IPL Season")
@@ -144,7 +146,12 @@ with tabs[6]:
         if team:
             team_data = deliveries[deliveries['batting_team'] == team]
             top_batsmen = team_data.groupby('batter')['batsman_runs'].sum().sort_values(ascending=False).head(10)
-            st.bar_chart(top_batsmen)
+            fig, ax = plt.subplots()
+            bars = ax.bar(top_batsmen.index, top_batsmen.values)
+            ax.bar_label(bars)
+            ax.set_title(f"Top 10 Batsmen for {team}")
+            ax.tick_params(axis='x', rotation=45)
+            st.pyplot(fig)
 
 # 8. Top Wicket Takers
 with tabs[7]:
@@ -155,7 +162,12 @@ with tabs[7]:
         if team:
             df = deliveries[(deliveries['bowling_team'] == team) & (deliveries['dismissal_kind'].notnull())]
             top_wicket_takers = df['bowler'].value_counts().head(5)
-            st.bar_chart(top_wicket_takers)
+            fig, ax = plt.subplots()
+            bars = ax.bar(top_wicket_takers.index, top_wicket_takers.values)
+            ax.bar_label(bars)
+            ax.set_title(f"Top 5 Wicket Takers for {team}")
+            ax.tick_params(axis='x', rotation=45)
+            st.pyplot(fig)
 
 # 9. Powerplay Runs
 with tabs[8]:
@@ -167,7 +179,12 @@ with tabs[8]:
             deliveries['over'] = deliveries['over'].astype(int)
             pp = deliveries[(deliveries['over'] <= 6) & (deliveries['batting_team'] == team)]
             runs_by_batsman = pp.groupby('batter')['total_runs'].sum().sort_values(ascending=False).head(10)
-            st.bar_chart(runs_by_batsman)
+            fig, ax = plt.subplots()
+            bars = ax.bar(runs_by_batsman.index, runs_by_batsman.values)
+            ax.bar_label(bars)
+            ax.set_title(f"Top Powerplay Run Scorers - {team}")
+            ax.tick_params(axis='x', rotation=45)
+            st.pyplot(fig)
 
 # 10. Toss Win Match Win
 with tabs[9]:
