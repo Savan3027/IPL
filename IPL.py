@@ -3,13 +3,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from difflib import get_close_matches
 
-st.set_page_config(page_title="IPL Smart Dashboard", layout="wide")
-st.title("🏏 IPL Analysis Dashboard")
+st.set_page_config(page_title="IPL Colorful Dashboard", layout="wide")
+st.title("🏏 IPL Analysis Dashboard (Colorful Edition)")
 
 @st.cache_data
 def load_data():
-    matches = pd.read_csv("https://drive.google.com/uc?id=1PAgRqv7J76lR6Ogew7xqsKm3YP0dR5o_")
-    deliveries = pd.read_csv("https://drive.google.com/uc?id=1KD5HPSS9Bk5sd2Q-JHByAKkbuB8yOGJK")
+    matches = pd.read_csv("matches.csv")
+    deliveries = pd.read_csv("deliveries.csv")
     return matches, deliveries
 
 matches, deliveries = load_data()
@@ -18,7 +18,6 @@ def get_closest_match(name, options):
     match = get_close_matches(name, options, n=1, cutoff=0.5)
     return match[0] if match else None
 
-# Tabs without "Team Result"
 tabs = st.tabs([
     "Match Results",
     "Player of Match",
@@ -43,7 +42,8 @@ with tabs[0]:
             total = len(team_matches)
             losses = total - wins
             fig, ax = plt.subplots()
-            bars = ax.bar(['Won', 'Lost'], [wins, losses], color='orange')
+            colors = ['#4CAF50', '#F44336']
+            bars = ax.bar(['Won', 'Lost'], [wins, losses], color=colors)
             ax.bar_label(bars)
             ax.set_title(f"Match Results for {team}")
             st.pyplot(fig)
@@ -60,19 +60,14 @@ with tabs[1]:
         if player_name:
             player_df = matches[matches['player_of_match'] == player_name]
             season_awards = player_df['season'].value_counts().sort_index()
-            st.write("### Awards by Season")
-            st.dataframe(season_awards.rename("count"))
-
             fig, ax = plt.subplots()
-            bars = ax.bar(season_awards.index.astype(str), season_awards.values, color='lightgreen')
+            colors = plt.cm.Paired(range(len(season_awards)))
+            bars = ax.bar(season_awards.index.astype(str), season_awards.values, color=colors)
             ax.bar_label(bars)
             ax.set_ylabel("Awards")
-            ax.set_xlabel("Season")
-            ax.set_title(f"{player_name} - Player of the Match Awards by Season")
+            ax.set_title(f"{player_name} - Player of the Match by Season")
             ax.tick_params(axis='x', rotation=45)
             st.pyplot(fig)
-        else:
-            st.warning("Player not found.")
 
 # 3. Bowling by Team
 with tabs[2]:
@@ -84,7 +79,8 @@ with tabs[2]:
             df = deliveries[deliveries['batter'] == player]
             grouped = df.groupby('bowling_team')['batsman_runs'].sum().sort_values(ascending=False)
             fig, ax = plt.subplots()
-            bars = ax.bar(grouped.index, grouped.values)
+            colors = plt.cm.tab20(range(len(grouped)))
+            bars = ax.bar(grouped.index, grouped.values, color=colors)
             ax.bar_label(bars)
             ax.set_title(f"{player} vs Bowling Teams")
             ax.tick_params(axis='x', rotation=45)
@@ -100,7 +96,8 @@ with tabs[3]:
             df = deliveries[deliveries['batter'] == player]
             grouped = df.groupby('bowler')['batsman_runs'].sum().sort_values(ascending=False).head(10)
             fig, ax = plt.subplots()
-            bars = ax.bar(grouped.index, grouped.values)
+            colors = plt.cm.Set3(range(len(grouped)))
+            bars = ax.bar(grouped.index, grouped.values, color=colors)
             ax.bar_label(bars)
             ax.set_title(f"{player} vs Bowlers (Top 10)")
             ax.tick_params(axis='x', rotation=45)
@@ -116,7 +113,8 @@ with tabs[4]:
             team_data = deliveries[deliveries['batting_team'] == team]
             top_batsmen = team_data.groupby('batter')['batsman_runs'].sum().sort_values(ascending=False).head(10)
             fig, ax = plt.subplots()
-            bars = ax.bar(top_batsmen.index, top_batsmen.values)
+            colors = plt.cm.viridis(range(len(top_batsmen)))
+            bars = ax.bar(top_batsmen.index, top_batsmen.values, color=colors)
             ax.bar_label(bars)
             ax.set_title(f"Top 10 Batsmen for {team}")
             ax.tick_params(axis='x', rotation=45)
@@ -132,7 +130,8 @@ with tabs[5]:
             df = deliveries[(deliveries['bowling_team'] == team) & (deliveries['dismissal_kind'].notnull())]
             top_wicket_takers = df['bowler'].value_counts().head(5)
             fig, ax = plt.subplots()
-            bars = ax.bar(top_wicket_takers.index, top_wicket_takers.values)
+            colors = plt.cm.plasma(range(len(top_wicket_takers)))
+            bars = ax.bar(top_wicket_takers.index, top_wicket_takers.values, color=colors)
             ax.bar_label(bars)
             ax.set_title(f"Top 5 Wicket Takers for {team}")
             ax.tick_params(axis='x', rotation=45)
@@ -149,7 +148,8 @@ with tabs[6]:
             pp = deliveries[(deliveries['over'] <= 6) & (deliveries['batting_team'] == team)]
             runs_by_batsman = pp.groupby('batter')['total_runs'].sum().sort_values(ascending=False).head(10)
             fig, ax = plt.subplots()
-            bars = ax.bar(runs_by_batsman.index, runs_by_batsman.values)
+            colors = plt.cm.cool(range(len(runs_by_batsman)))
+            bars = ax.bar(runs_by_batsman.index, runs_by_batsman.values, color=colors)
             ax.bar_label(bars)
             ax.set_title(f"Top Powerplay Run Scorers - {team}")
             ax.tick_params(axis='x', rotation=45)
