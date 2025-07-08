@@ -18,13 +18,12 @@ def get_closest_match(name, options):
     match = get_close_matches(name, options, n=1, cutoff=0.5)
     return match[0] if match else None
 
-# Corrected tab list (no Season Summary)
+# Tabs without "Team Result"
 tabs = st.tabs([
     "Match Results",
     "Player of Match",
     "Bowling by Team",
     "Bowler Summary",
-    "Team Result",
     "Top Batsman",
     "Top Wicket Takers",
     "Powerplay Runs",
@@ -107,23 +106,8 @@ with tabs[3]:
             ax.tick_params(axis='x', rotation=45)
             st.pyplot(fig)
 
-# 5. Team Result
+# 5. Top Batsman
 with tabs[4]:
-    st.header("Team Result Summary")
-    team = st.text_input("Enter team name:", key="team_result")
-    if team:
-        team = get_closest_match(team, matches['team1'].unique())
-        if team:
-            winner = matches['winner'].value_counts().sort_values(ascending=False)
-            fig, ax = plt.subplots()
-            bars = ax.bar(winner.index, winner.values)
-            ax.bar_label(bars)
-            ax.set_title("Total Match Wins by Teams")
-            ax.tick_params(axis='x', rotation=45)
-            st.pyplot(fig)
-
-# 6. Top Batsman
-with tabs[5]:
     st.header("Top Batsmen for a Team")
     team = st.text_input("Enter team name:", key="top_batsman")
     if team:
@@ -138,8 +122,8 @@ with tabs[5]:
             ax.tick_params(axis='x', rotation=45)
             st.pyplot(fig)
 
-# 7. Top Wicket Takers
-with tabs[6]:
+# 6. Top Wicket Takers
+with tabs[5]:
     st.header("Top 5 Wicket Takers for Team")
     team = st.text_input("Enter team name:", key="top_wickets")
     if team:
@@ -154,8 +138,8 @@ with tabs[6]:
             ax.tick_params(axis='x', rotation=45)
             st.pyplot(fig)
 
-# 8. Powerplay Runs
-with tabs[7]:
+# 7. Powerplay Runs
+with tabs[6]:
     st.header("Powerplay Runs (Overs 1–6)")
     team = st.text_input("Enter team name:", key="powerplay")
     if team:
@@ -171,8 +155,8 @@ with tabs[7]:
             ax.tick_params(axis='x', rotation=45)
             st.pyplot(fig)
 
-# 9. Toss Win Match Win
-with tabs[8]:
+# 8. Toss Win Match Win
+with tabs[7]:
     st.header("Toss Win Match Win Percentage")
     team = st.text_input("Enter team name:", key="toss_win")
     if team:
