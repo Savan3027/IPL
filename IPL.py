@@ -25,7 +25,6 @@ tabs = st.tabs([
     "Bowling by Team",
     "Bowler Summary",
     "Team Result",
-    "Season Summary",
     "Top Batsman",
     "Top Wicket Takers",
     "Powerplay Runs",
