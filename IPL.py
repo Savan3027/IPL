@@ -8,8 +8,9 @@ st.title("🏏 IPL Analysis Dashboard (Colorful Edition)")
 
 @st.cache_data
 def load_data():
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
+   matches = pd.read_csv("https://drive.google.com/uc?id=1PAgRqv7J76lR6Ogew7xqsKm3YP0dR5o_")
+   deliveries = pd.read_csv("https://drive.google.com/uc?id=1KD5HPSS9Bk5sd2Q-JHByAKkbuB8yOGJK")
+
     return matches, deliveries
 
 matches, deliveries = load_data()
