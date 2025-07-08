@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from difflib import get_close_matches
 import matplotlib.cm as cm
 
-st.set_page_config(page_title="IPL Analysis Dashboard (Colorful Edition)", layout="wide")
-st.title("🏏 IPL Analysis Dashboard (Colorful Edition)")
+st.set_page_config(page_title="IPL Analysis Dashboard", layout="wide")
+st.title("🏏 IPL Analysis Dashboard")
 
 # Load data from Google Drive
 @st.cache_data
