@@ -10,8 +10,8 @@ st.title("🏏 IPL Analysis Dashboard")
 # Load data from Google Drive
 @st.cache_data
 def load_data():
-     matches_url = "https://drive.google.com/uc?id=1PAgRqv7J76lR6Ogew7xqsKm3YP0dR5o_"
-     deliveries_url = "https://drive.google.com/uc?id=1KD5HPSS9Bk5sd2Q-JHByAKkbuB8yOGJK"
+    matches_url = "https://drive.google.com/uc?id=1PAgRqv7J76lR6Ogew7xqsKm3YP0dR5o_"
+    deliveries_url = "https://drive.google.com/uc?id=1KD5HPSS9Bk5sd2Q-JHByAKkbuB8yOGJK"
 
     matches = pd.read_csv(matches_url)
     deliveries = pd.read_csv(deliveries_url)
@@ -178,6 +178,3 @@ with tabs[7]:
             st.write("Total Toss Win:", total_toss_win)
             st.write("Total Match Win:", total_match_win)
             st.write("Winning Percentage:", win_percentage, "%")
-
-
-
