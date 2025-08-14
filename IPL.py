@@ -3,18 +3,23 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from difflib import get_close_matches
 import matplotlib.cm as cm
+import gdown
 
 st.set_page_config(page_title="IPL Analysis Dashboard", layout="wide")
 st.title("🏏 IPL Analysis Dashboard")
 
-# Load data from Google Drive
+# Load data from Google Drive using gdown
 @st.cache_data
 def load_data():
     matches_url = "https://drive.google.com/uc?id=1PAgRqv7J76lR6Ogew7xqsKm3YP0dR5o_"
     deliveries_url = "https://drive.google.com/uc?id=1KD5HPSS9Bk5sd2Q-JHByAKkbuB8yOGJK"
 
-    matches = pd.read_csv(matches_url)
-    deliveries = pd.read_csv(deliveries_url)
+    # Download files locally
+    gdown.download(matches_url, "matches.csv", quiet=False)
+    gdown.download(deliveries_url, "deliveries.csv", quiet=False)
+
+    matches = pd.read_csv("matches.csv")
+    deliveries = pd.read_csv("deliveries.csv")
 
     return matches, deliveries
 
