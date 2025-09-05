@@ -12,14 +12,24 @@ st.title("🏏 IPL Analysis Dashboard")
 @st.cache_data
 def load_data():
     matches_url = "https://drive.google.com/uc?id=1PAgRqv7J76lR6Ogew7xqsKm3YP0dR5o_"
-    deliveries_url = "https://drive.google.com/uc?id=1KD5HPSS9Bk5sd2Q-JHByAKkbuB8yOGJK"
+    deliveries_url = "https://drive.google.com/uc?id=1u2J_CyotfSzM4d8WpZZ2bpTI-T85TMaK"
 
     # Download files locally
     gdown.download(matches_url, "matches.csv", quiet=False)
     gdown.download(deliveries_url, "deliveries.csv", quiet=False)
 
-    matches = pd.read_csv("matches.csv")
-    deliveries = pd.read_csv("deliveries.csv")
+    # Robust CSV loading to avoid ParserError
+    def safe_read_csv(path):
+        try:
+            return pd.read_csv(path)
+        except Exception:
+            try:
+                return pd.read_csv(path, engine="python", on_bad_lines="skip")
+            except Exception:
+                return pd.read_csv(path, sep="\t", engine="python", on_bad_lines="skip")
+
+    matches = safe_read_csv("matches.csv")
+    deliveries = safe_read_csv("deliveries.csv")
 
     return matches, deliveries
 
